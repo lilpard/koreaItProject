@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.CartRepository">
+
+	<resultMap type="Author" id="AuthorMap">
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="AUTHOR_NAME" property="authorName"/>
+		<result column="AUTHOR_INTRO" property="authorIntro"/>
+	</resultMap>	
+	<resultMap type="Artwork" id="ArtworkMap">
+		<result column="ART_NO" property="artNo"/>
+		<result column="ART_NAME" property="artName"/>
+		<result column="PATH" property="path"/>
+		<result column="PRICE" property="price"/>
+		<result column="THEME" property="theme"/>
+		<result column="STATE" property="state"/>
+		<collection property="author" resultMap="AuthorMap"/>
+	</resultMap>
+	
+	<resultMap type="Member" id="MemberMap">
+		<result column="USER_NO" property="userNo"/>
+		<result column="EMAIL" property="email"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="NICKNAME" property="nickname"/>
+		<result column="PW" property="pw"/>
+		<result column="TEL" property="tel"/>
+		<result column="USER_STATE" property="userState"/>
+	</resultMap>
+
+	<resultMap type="Cart" id="CartMap">
+		<result column="CART_NO" property="cartNo"/>
+		<collection property="member" resultMap="MemberMap"/>
+		<collection property="artwork" resultMap="ArtworkMap"/>
+	</resultMap>
+	
+	
+	<select id="DuplicateCheck" parameterType="Map" resultType="int">
+		SELECT COUNT(*)
+		  FROM CART
+		 WHERE ART_NO = #{artNo}
+		   AND USER_NO = #{userNo}
+	</select>
+
+	<insert id="insertCart" parameterType="Map">
+		INSERT INTO CART
+		VALUES ((SELECT nextval('CART_SEQ') FROM DUAL), #{artNo}, #{userNo})
+	</insert>
+	
+	<select id="totalCount" parameterType="Long" resultType="int">
+		SELECT COUNT(CART_NO)
+		  FROM CART
+		 WHERE USER_NO = #{userNo}
+	</select>
+
+	<select id="totalPrice" parameterType="Long" resultType="int">
+		 SELECT IFNULL(SUM(A.PRICE), 0) AS SUM
+		   FROM ARTWORK A 
+		  INNER JOIN CART C
+		     ON A.ART_NO = C.ART_NO
+		  WHERE C.USER_NO = #{userNo}
+		  GROUP BY C.USER_NO
+        
+        UNION ALL
+        
+        SELECT 0 AS SUM
+          FROM DUAL
+        WHERE NOT EXISTS (SELECT IFNULL(SUM(A.PRICE), 0) AS SUM
+                           FROM ARTWORK A 
+                          INNER JOIN CART C
+							 ON A.ART_NO = C.ART_NO
+						  WHERE C.USER_NO = #{userNo}
+                          GROUP BY C.USER_NO)
+	</select>
+
+	<select id="findCartList" parameterType="Long" resultMap="CartMap">
+		SELECT C.CART_NO, M.USER_NAME, A.ART_NAME, A.PRICE, A.ART_NO, A.PATH, R.AUTHOR_NAME
+		  FROM AUTHOR R 
+		 RIGHT JOIN ARTWORK A
+		    ON R.AUTHOR_NO = A.AUTHOR_NO
+		 INNER JOIN CART C
+		    ON A.ART_NO = C.ART_NO
+		 INNER JOIN MEMBER M
+		    ON M.USER_NO = C.USER_NO 
+		 WHERE C.USER_NO = #{userNo}
+	</select>
+
+	<delete id="deleteCart" parameterType="Map">
+		DELETE FROM CART
+		<where>
+			<foreach collection="cartNo" item="item" open="" close="" separator="OR">
+				CART_NO = #{item}
+			</foreach>
+		</where>
+	</delete>
+
+
+</mapper>

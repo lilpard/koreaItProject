@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.RentalRepository">
+
+	<resultMap type="Author" id="AuthorMap">
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="AUTHOR_NAME" property="authorName"/>
+		<result column="AUTHOR_INTRO" property="authorIntro"/>
+	</resultMap>	
+	<resultMap type="Artwork" id="ArtworkMap">
+		<result column="ART_NO" property="artNo"/>
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="ART_NAME" property="artName"/>
+		<result column="PATH" property="path"/>
+		<result column="PRICE" property="price"/>
+		<result column="THEME" property="theme"/>
+		<result column="STATE" property="state"/>
+		<collection property="author" resultMap="AuthorMap"/>
+	</resultMap>
+	
+	<resultMap type="Member" id="MemberMap">
+		<result column="USER_NO" property="userNo"/>
+		<result column="EMAIL" property="email"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="NICKNAME" property="nickname"/>
+		<result column="PW" property="pw"/>
+		<result column="TEL" property="tel"/>
+		<result column="USER_STATE" property="userState"/>
+	</resultMap>
+	
+	<resultMap type="Rental" id="RentalMap">
+		<result column="RENTAL_NO" property="rentalNo"/>
+		<result column="RECIEVER_NAME" property="recieverName"/>
+		<result column="RECIEVER_TEL" property="recieverTel"/>
+		<result column="ADDRESS" property="address"/>
+		<result column="START_DATE" property="startDate"/>
+		<result column="END_DATE" property="endDate"/>
+		<result column="REQUIREMENTS" property="requirements"/>
+		<result column="RENTAL_STATE" property="rentalState"/>
+		<collection property="artwork" resultMap="ArtworkMap"/>
+		<collection property="member" resultMap="MemberMap"/>
+	</resultMap>
+
+	<select id="artNoDuplicateCheck" parameterType="Map" resultMap="RentalMap">
+		SELECT A.ART_NO, A.ART_NAME
+		  FROM ARTWORK A 
+		  INNER JOIN RENTAL R
+		    ON A.ART_NO = R.ART_NO
+		 WHERE R.RENTAL_STATE = 1
+		   AND A.ART_NO IN
+		  <foreach collection="artNo" item="item" open="(" close=")" separator=",">
+			${item}
+		 </foreach>	
+	</select>
+	
+	<select id="rentalDuplicateCheck" parameterType="Map" resultMap="RentalMap">
+		SELECT A.ART_NO, A.ART_NAME
+		  FROM ARTWORK A 
+		 INNER JOIN RENTAL R
+		    ON A.ART_NO = R.ART_NO
+		 WHERE R.RENTAL_STATE = 1
+		   AND A.ART_NO IN
+		  <foreach collection="rentalData" item="item" open="(" close=")" separator=",">
+			${item.artNo}
+		 </foreach>	
+	</select>
+	
+	<insert id="insertRental" parameterType="Map">
+		INSERT INTO RENTAL (RENTAL_NO, ART_NO, USER_NO, RECIEVER_NAME, RECIEVER_TEL, ADDRESS, REQUIREMENTS, START_DATE, END_DATE, RENTAL_STATE) 
+		SELECT (SELECT nextval('RENTAL_SEQ') FROM DUAL), A.* 
+		FROM (
+		<foreach collection="rentalData" item="item" open="" separator="UNION ALL">
+			SELECT 	#{item.artNo} as ART_NO, 
+					#{item.userNo} AS USER_NO, 
+					#{item.recieverName} AS RECIEVER_NAME, 
+					#{item.recieverTel} AS RECIEVER_TEL, 
+					#{item.address} AS ADDRESS, 
+					#{item.requirements} AS REQUIREMENT, 
+					STR_TO_DATE(#{item.startDate}, '%m/%d/%Y') AS START_DATE
+					, STR_TO_DATE(#{item.endDate}, '%m/%d/%Y') AS END_DATE, 
+					1 
+			FROM DUAL		
+		</foreach>
+		) A
+	</insert>
+
+	<select id="selectForRental" parameterType="Map" resultMap="ArtworkMap">
+		SELECT W.ART_NO, W.ART_NAME, W.PATH, W.PRICE, W.THEME, W.STATE, U.AUTHOR_NO, U.AUTHOR_NAME, U.AUTHOR_INTRO
+		  FROM AUTHOR U INNER JOIN ARTWORK W
+		    ON U.AUTHOR_NO = W.AUTHOR_NO
+		 WHERE W.ART_NO IN
+		 <foreach collection="artNo" item="item" open="(" close=")" separator=",">
+			${item}
+		 </foreach>
+	</select>
+
+	<select id="totalCount" parameterType="Map" resultType="int">
+		SELECT COUNT(ART_NO)
+		  FROM ARTWORK
+		 WHERE ART_NO IN
+		  <foreach collection="artNo" item="item" open="(" close=")" separator=",">
+			${item}
+		 </foreach>
+	</select>
+
+	<select id="totalPrice" parameterType="Map" resultType="int">
+		 SELECT IFNULL(SUM(PRICE), 0) AS SUM
+		  FROM ARTWORK
+		 WHERE ART_NO IN
+		<foreach collection="artNo" index="i" item="item" open="(" close=")" separator=",">
+			${item}
+	 	</foreach>
+	        UNION ALL
+	        
+	        SELECT 0 AS SUM
+	          FROM DUAL
+	        WHERE NOT EXISTS (SELECT IFNULL(SUM(PRICE), 0) AS SUM
+							    FROM ARTWORK
+							   WHERE ART_NO IN
+							<foreach collection="artNo" index="i" item="item" open="(" close="))" separator=",">
+								${item}
+	 						</foreach>
+	</select>
+
+	<!-- 렌탈 중인 작품들 -->
+	<select id="rentalList" parameterType="Map" resultMap="RentalMap">
+		SELECT B.RENTAL_NO, B.RECIEVER_NAME, B.RECIEVER_TEL, B.ADDRESS, B.REQUIREMENTS, B.START_DATE, B.END_DATE, B.RENTAL_STATE, B.USER_NO, B.USER_NAME, B.ART_NO, B.ART_NAME, B.PATH, B.PRICE, B.THEME, B.STATE, B.AUTHOR_NO, B.AUTHOR_NAME 		
+		  FROM (SELECT @ROWNUM:=@ROWNUM+1 as RN, A.RENTAL_NO, A.RECIEVER_NAME, A.RECIEVER_TEL, A.ADDRESS, A.REQUIREMENTS, A.START_DATE, A.END_DATE, A.RENTAL_STATE, A.USER_NO, A.USER_NAME, A.ART_NO, A.ART_NAME, A.PATH, A.PRICE, A.THEME, A.STATE, A.AUTHOR_NO, A.AUTHOR_NAME 	
+				FROM(SELECT RENTAL_NO, RECIEVER_NAME, RECIEVER_TEL, ADDRESS, REQUIREMENTS, START_DATE, END_DATE, RENTAL_STATE, M.USER_NO, M.USER_NAME, W.ART_NO, W.ART_NAME, W.PATH, W.PRICE, W.THEME, W.STATE, U.AUTHOR_NO, U.AUTHOR_NAME 
+				  	   FROM AUTHOR U 
+				  	  RIGHT JOIN ARTWORK W
+				  	     ON U.AUTHOR_NO = W.AUTHOR_NO 
+				  	  INNER JOIN RENTAL R
+				  	     ON W.ART_NO = R.ART_NO
+				  	  INNER JOIN MEMBER M
+				 		 ON M.USER_NO = R.USER_NO
+				   	  WHERE M.USER_NO = #{userNo} 
+				        AND R.RENTAL_STATE = 1 
+				   	  ORDER BY RENTAL_NO DESC) A,
+				   	  (SELECT @ROWNUM := 0) D) B
+		 WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	<select id="rentalTotalCount" parameterType="Long" resultType="int">
+		SELECT COUNT(*)
+		  FROM RENTAL
+		 WHERE USER_NO = #{userNo}
+		   AND RENTAL_STATE = 1
+	</select>
+	
+	<update id="returnArt">
+		UPDATE RENTAL 
+		   SET RENTAL_STATE = 2
+		 WHERE END_DATE <![CDATA[ <= ]]> NOW()
+		   AND RENTAL_STATE = 1
+	</update>
+	
+	<!-- 반납된 작품 -->
+	<select id="returnList" parameterType="Map" resultMap="RentalMap">
+		SELECT B.RENTAL_NO, B.RECIEVER_NAME, B.RECIEVER_TEL, B.ADDRESS, B.REQUIREMENTS, B.START_DATE, B.END_DATE, B.RENTAL_STATE, B.USER_NO, B.USER_NAME, B.ART_NO, B.ART_NAME, B.PATH, B.PRICE, B.THEME, B.STATE, B.AUTHOR_NO, B.AUTHOR_NAME 		
+		  FROM (SELECT @ROWNUM:=@ROWNUM+1 as RN, A.RENTAL_NO, A.RECIEVER_NAME, A.RECIEVER_TEL, A.ADDRESS, A.REQUIREMENTS, A.START_DATE, A.END_DATE, A.RENTAL_STATE, A.USER_NO, A.USER_NAME, A.ART_NO, A.ART_NAME, A.PATH, A.PRICE, A.THEME, A.STATE, A.AUTHOR_NO, A.AUTHOR_NAME 	
+				FROM(SELECT RENTAL_NO, RECIEVER_NAME, RECIEVER_TEL, ADDRESS, REQUIREMENTS, START_DATE, END_DATE, RENTAL_STATE, M.USER_NO, M.USER_NAME, W.ART_NO, W.ART_NAME, W.PATH, W.PRICE, W.THEME, W.STATE, U.AUTHOR_NO, U.AUTHOR_NAME 
+				  	  FROM AUTHOR U
+				  	 RIGHT JOIN ARTWORK W
+				  	    ON U.AUTHOR_NO = W.AUTHOR_NO
+				  	 INNER JOIN RENTAL R
+				  	    ON W.ART_NO = R.ART_NO
+				  	 INNER JOIN MEMBER M 
+				  	    ON M.USER_NO = R.USER_NO
+				 	 WHERE M.USER_NO = #{userNo} 
+				   	   AND R.RENTAL_STATE = 2
+				   	 ORDER BY RENTAL_NO DESC) A,
+				   	 (SELECT @ROWNUM := 0) D) B
+		 WHERE RN BETWEEN #{beginRecord} AND #{endRecord}
+	</select>
+	<select id="returnTotalCount" parameterType="Long" resultType="int">
+		SELECT COUNT(*)
+		  FROM RENTAL
+		 WHERE USER_NO = #{userNo}
+		   AND RENTAL_STATE = 2
+	</select>
+	
+	<update id="deleteRental" parameterType="Long">
+		UPDATE RENTAL
+		   SET RENTAL_STATE = 3
+		 WHERE RENTAL_NO = #{rentalNo}
+	</update>
+</mapper>

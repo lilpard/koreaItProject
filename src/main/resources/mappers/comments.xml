@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.CommentsRepository">
+
+	<resultMap type="Member" id="MemberMap">
+		<result column="USER_NO" property="userNo"/>
+		<result column="EMAIL" property="email"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="PW" property="pw"/>
+		<result column="TEL" property="tel"/>
+		<result column="USER_STATE" property="userState"/>
+	</resultMap>
+	
+	<resultMap type="Review" id="ReviewMap">
+		<result column="REVIEW_NO" property="reviewNo"/>
+		<result column="ART_NO" property="artNo"/>
+		<result column="USER_NO" property="userNo"/>
+		<result column="REVIEW_CONTENT" property="reviewContent"/>
+		<result column="STAR_RATING" property="starRating"/>
+	</resultMap>
+	
+	 <resultMap type="Comments" id="CommentsMap">
+	 	<result column="COMMENT_NO" property="commentNo"/>
+	 	<result column="COMMENT_CONTENT" property="commentContent"/>
+	 	<result column="COMMENT_CREATED" property="commentCreated"/>
+	 	<collection property="member" resultMap="MemberMap"/>
+	 	<collection property="review" resultMap="ReviewMap"/>
+	 </resultMap>
+
+	<select id="selectCommentsListByReviewNo" parameterType="Long" resultMap="CommentsMap">
+		SELECT C.COMMENT_NO, R.REVIEW_NO, M.USER_NO, M.NICKNAME, C.COMMENT_CONTENT, C.COMMENT_CREATED
+		  FROM COMMENTS C 
+		 INNER JOIN REVIEW R
+   	     	ON R.REVIEW_NO = C.REVIEW_NO
+   	     INNER JOIN MEMBER M
+		    ON C.USER_NO = M.USER_NO 
+		 WHERE C.REVIEW_NO = #{reviewNo}
+	</select>
+	
+	<insert id="insertComments" parameterType="Comments">
+		<selectKey keyProperty="commentNo" order="BEFORE" resultType="Long">
+			SELECT nextval('COMMENTS_SEQ')
+			  FROM DUAL
+		</selectKey>
+		INSERT INTO COMMENTS
+		VALUES (#{commentNo}, #{reviewNo}, #{userNo}, #{commentContent}, NOW(), #{depth}, #{groupNo}, #{commentOrd} )
+	</insert>
+	
+	<update id="updateComments" parameterType="Comments">
+		UPDATE COMMENTS
+		   SET COMMENT_CONTENT = #{commentContent}
+		 WHERE COMMENT_NO = #{commentNo}
+		   AND USER_NO = #{userNo}  
+	</update>
+	
+	<delete id="deleteComments" parameterType="Long">
+		DELETE
+		  FROM COMMENTS
+		 WHERE COMMENT_NO = #{commentNo} 
+	</delete>
+	
+	
+		
+</mapper>

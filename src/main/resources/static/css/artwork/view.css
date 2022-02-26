@@ -1,0 +1,109 @@
+*{
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+.art_container{
+    display: flex;
+    justify-content: center;
+}
+.art_img{
+    display: inline-block;
+    width: 700px;  
+    background-color: burlywood;
+}
+.art_info{
+	margin-left: 20px;
+	padding: 50px;
+	border: 1px solid black;
+	text-align: center;
+	width: 300px;
+	height: 400px;
+	
+}
+.art_info li{
+	list-style-type: none;
+}
+.art_info #title{
+	margin-bottom: 30px;
+}
+.info {
+	color: silver;
+	margin-right: 30px;
+}
+.art_detail{
+	border-top: 2px solid black;	
+	padding-top: 10px;
+	margin-top: 20px;
+	text-align: left;
+}
+.art_button{
+	width: 200px;
+}
+.addCart{
+	margin-top: 20px;
+	height: 50px;
+	padding: 10px;
+}
+.artRental{
+	margin-left: 10px;
+	margin-top: 20px;
+	height: 50px;
+	padding: 10px;
+}
+.link_wrapper{
+	width: 80px;
+	margin: 0 auto;
+	margin-top: 20px;
+}
+.review_header{
+	border-bottom: 2px solid black;
+	margin-bottom: 20px;
+}
+.review_wrap{
+	width: 1000px;
+	margin: 0 auto;
+	margin-top: 20px;
+	border: 1px solid black;
+	border-radius: 20px;
+	padding: 20px;
+}
+.review_content{
+	border: 1px solid black;
+	border-radius: 20px;
+	margin-bottom: 5px;
+	padding: 10px;
+}
+.nickname{
+	margin-right: 20px;
+}
+.review_content_header{
+	margin: 10px;
+	border-bottom: 1px solid black;
+}
+.comment_input_btn{
+	padding: 10px;
+	text-align: left;	
+}
+.comment_list{
+	padding: 20px;
+}
+.comment_commentContent{
+	margin-right: 20px;	
+}
+.comment_nickname{
+	margin-right: 10px;
+}
+.comment_created{
+	margin-right: 10px;
+}
+#comment_content{
+	width: 950px;
+	padding: 20px;
+	border-radius: 20px;
+}
+.comment_insert_btn{
+	width: 950px;
+	height: 50px;
+	border-radius: 20px;
+}

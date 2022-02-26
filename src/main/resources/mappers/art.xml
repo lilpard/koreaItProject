@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.ArtRepository">
+
+	<resultMap type="Author" id="AuthorMap">
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="AUTHOR_NAME" property="authorName"/>
+		<result column="AUTHOR_INTRO" property="authorIntro"/>
+	</resultMap>	
+	<resultMap type="Artwork" id="ArtworkMap">
+		<result column="ART_NO" property="artNo"/>
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="ART_NAME" property="artName"/>
+		<result column="PATH" property="path"/>
+		<result column="PRICE" property="price"/>
+		<result column="THEME" property="theme"/>
+		<result column="STATE" property="state"/>
+		<collection property="author" resultMap="AuthorMap"/>
+	</resultMap>
+
+	<select id="artTotalCount" parameterType="Map" resultType="int">
+		SELECT COUNT(*)
+		  FROM AUTHOR R 
+		  RIGHT JOIN ARTWORK W
+		    ON R.AUTHOR_NO = W.AUTHOR_NO
+		    WHERE 1 = 1
+	   <if test="state == true" >AND W.STATE = 1</if>
+	   <if test="theme != '전체보기'">AND W.THEME = #{theme}</if>
+	   <if test="query != 'null'">AND (W.ART_NAME LIKE CONCAT( '%', #{query}, '%') OR R.AUTHOR_NAME LIKE CONCAT('%', #{query}, '%'))</if>
+	</select>
+
+	<select id="findArtList" parameterType="Map" resultMap="ArtworkMap">
+		SELECT B.ART_NO, B.AUTHOR_NO, B.AUTHOR_NAME, B.AUTHOR_INTRO, B.ART_NAME, B.PATH, B.PRICE, B.THEME, B.STATE
+			FROM(SELECT @ROWNUM:=@ROWNUM+1 as RN, A.ART_NO, A.AUTHOR_NO, A.AUTHOR_NAME, A.AUTHOR_INTRO, A.ART_NAME, A.PATH, A.PRICE, A.THEME, A.STATE
+				   FROM (SELECT ART_NO, R.AUTHOR_NO, R.AUTHOR_NAME, R.AUTHOR_INTRO, ART_NAME, PATH, PRICE, THEME, STATE
+					  	   FROM AUTHOR R 
+					  	   RIGHT JOIN ARTWORK W
+					  	   ON R.AUTHOR_NO = W.AUTHOR_NO
+					  	   WHERE 1 = 1 
+					  	   <if test="theme != '전체보기'">AND W.THEME = #{theme}</if>
+					  	   <if test="state == true" >AND W.STATE = 1</if>
+					  	   <if test="query != 'null'">AND (W.ART_NAME LIKE CONCAT('%', #{query}, '%') OR R.AUTHOR_NAME LIKE CONCAT('%', #{query}, '%'))</if>
+					  	   <if test="arrange  == 'RECENT'">ORDER BY W.ART_NO DESC</if>
+					  	   <if test="arrange == 'HIGHPRICE'">ORDER BY W.PRICE DESC</if>
+					  	   <if test="arrange == 'LOWPRICE'">ORDER BY W.PRICE ASC</if>
+					  	   ) A, 
+					  	   (SELECT @ROWNUM := 0) D) B
+		 WHERE B.RN BETWEEN #{beginRecord} AND #{endRecord} 
+	</select>
+	
+	
+	<select id="selectArtByNo" parameterType="Long" resultMap="ArtworkMap">
+		SELECT W.ART_NO, W.ART_NAME, W.PATH, W.PRICE, W.THEME, W.STATE, U.AUTHOR_NO, U.AUTHOR_NAME, U.AUTHOR_INTRO
+		  FROM AUTHOR U 
+		  RIGHT JOIN ARTWORK W
+		   ON U.AUTHOR_NO = W.AUTHOR_NO
+		 WHERE ART_NO = #{artNo}
+	</select>
+	
+	
+	<select id="autoComplete" parameterType="String" resultType="Author">
+			SELECT DISTINCT AUTHOR_NAME
+			  FROM AUTHOR 
+			 WHERE AUTHOR_NAME LIKE concat(#{query}, '%')
+	</select>
+	
+	<select id="autoComplete2" parameterType="String" resultType="Artwork">
+			SELECT DISTINCT ART_NAME
+			  FROM ARTWORK 
+			 WHERE ART_NAME LIKE concat(#{query}, '%')
+	</select>
+
+</mapper>

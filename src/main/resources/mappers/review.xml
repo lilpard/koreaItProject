@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.ReviewRepository">
+
+	<resultMap type="Member" id="MemberMap">
+		<result column="USER_NO" property="userNo"/>
+		<result column="EMAIL" property="email"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="NICKNAME" property="nickName"/>
+		<result column="PW" property="pw"/>
+		<result column="TEL" property="tel"/>
+		<result column="USER_STATE" property="userState"/>
+	</resultMap>
+	
+	<resultMap type="Artwork" id="ArtworkMap">
+		<result column="ART_NO" property="artNo"/>
+		<result column="AUTHOR_NO" property="authorNo"/>
+		<result column="ART_NAME" property="artName"/>
+		<result column="PATH" property="path"/>
+		<result column="PRICE" property="price"/>
+		<result column="THEME" property="theme"/>
+		<result column="STATE" property="state"/>
+	</resultMap>
+	
+	 <resultMap type="Review" id="ReviewMap">
+	 	<result column="REVIEW_NO" property="reviewNo" />
+	 	<result column="REVIEW_CONTENT" property="reviewContent" />
+	 	<result column="STAR_RATING" property="starRating" />
+	 	<collection property="member" resultMap="MemberMap"/>
+	 	<collection property="artWork" resultMap="ArtworkMap"/>
+	 </resultMap>
+
+	<select id="selectReviewListByArtNo" parameterType="Long" resultMap="ReviewMap">
+		SELECT R.REVIEW_NO, W.ART_NO, M.NICKNAME, R.REVIEW_CONTENT, R.STAR_RATING
+		  FROM REVIEW R 
+		 INNER JOIN ARTWORK W
+		    ON R.ART_NO = W.ART_NO
+		 INNER JOIN MEMBER M
+		    ON R.USER_NO = M.USER_NO
+		 WHERE R.ART_NO = #{artNo}
+	</select>
+	
+	<insert id="insertReview" parameterType="Review">
+		INSERT INTO Review
+		VALUES ((SELECT nextval('REVIEW_SEQ') FROM DUAL), #{artNo}, #{userNo}, #{reviewContent}, #{starRating})
+	</insert>
+	
+		
+</mapper>

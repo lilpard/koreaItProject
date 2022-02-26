@@ -1,0 +1,101 @@
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;		
+}
+.cartTable{
+    width: 800px;
+    border-top: 1px solid black;
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+.cartTable thead{
+    background-color: rgb(240, 240, 240);
+    font-weight: bold;
+}
+.cartTable li{
+	list-style-type: none;
+	margin-left: 10px;
+}
+.checkAll_btn{
+    width: 20px;
+}
+.cartTable tr{
+    border-bottom: 1px solid silver;
+    text-align: center;
+}
+
+td:nth-of-type(1){
+	width: 30px;
+    padding: 10px;
+}
+.artInfo{
+	display: flex;
+	flex-wrap: wrap;
+	text-align: center;
+	margin: 10px;
+}
+
+.cartTableFooter{
+    width: 30px;
+}
+#carts_wrapper{
+	height: 40px;
+}
+.total{
+    width: 800px;
+    height: 100px;
+    background-color: rgb(240, 240, 240);
+    margin: 0 auto;
+    margin-top: 20px;
+    border: 1px solid rgb(168, 168, 168);
+    padding: 20px;
+    color: gray;
+}
+.total > div{
+    position: relative;
+}
+.totalCount{
+	width: 130px;
+    position: absolute;
+    right: 1px;
+}
+.totalPrice{
+	width: 130px;
+    position: absolute;
+    top: 30px;
+    right: 1px;
+}
+.btn{
+    text-align: center;
+}
+.AllDeleteBtn{
+    width: 80px;
+    height: 30px;
+    float: left;
+    bottom: 8px;
+    border: 1px solid gray;
+    border-radius: 5px;
+    background-color: white;
+    color: rgb(36, 36, 36);
+}
+.AllDeleteBtn:hover{
+    cursor: pointer;
+    background: linear-gradient(white 0%, white 20%, #e1e1e1 100%);
+    font-weight: 600;
+}
+.rentalBtn{
+    width: 80px;
+    margin-left: 20px;
+    height: 30px;
+    bottom: 8px;
+    border: 1px solid gray;
+    border-radius: 5px;
+    background-color: rgb(15, 15, 15);
+    color: white;
+}
+.rentalBtn:hover{
+    cursor: pointer;
+    background-color: rgb(20, 83, 155);
+    color: white;
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.example.project.repository.ArtWorkRepository"> 
+
+	<insert id="insertArtWork" parameterType="ArtWork">
+		INSERT INTO ARTWORK(ART_NO, AUTHOR_NO, ART_NAME, ORIGIN, SAVED, PATH, PRICE, THEME, THUMBNAIL, STATE)
+		VALUES ((SELECT nextval('ARTWORK_SEQ') FROM DUAL), #{authorNo}, #{artName}, #{path}, #{price}, #{theme}, 1)
+	</insert>
+		
+</mapper>

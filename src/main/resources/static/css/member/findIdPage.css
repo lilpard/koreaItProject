@@ -1,0 +1,30 @@
+@charset "UTF-8";
+*{
+	margin: 0;
+	padding:0;
+	box-sizing: border-box;
+}
+.wrap{
+	width: 800px;
+	border: 1px solid silver;
+	margin: 100px auto;
+	text-align: center;
+}
+.wrap_header{
+	margin: 50px 0;
+}
+#tel{
+	margin-top: 10px;
+	width: 200px;
+	height: 40px;
+}
+#search_btn{
+	width: 30px;
+	height: 40px;
+}
+#search_result > ul > li:nth-of-type(1) {
+	list-style-type: none;
+	color: olive;
+	font-weight: 600;
+	font-size: 18px;
+}
